@@ -1,0 +1,504 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        416
+      ],
+      "id": "6a2c109d-c1c5-4e91-9087-893856d885c4",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EnzIdp9CWVPr4w8W",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a38596b2-87f5-429a-aa13-34cd4d2ba59a",
+              "leftValue": "={{ $json.headers[\"delivered-to\"] }}",
+              "rightValue": "=Delivered-To: valo2gabo@gmail.com",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        224
+      ],
+      "id": "60f5525f-81bc-4c42-a7c6-ea2fcbeae1d4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "GET",
+        "url": "=https://www.virustotal.com/api/v3/analyses/{{ $json.data.id }}",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        32,
+        416
+      ],
+      "id": "fcc7c145-f7ad-41e8-ad7a-38fe04c41158",
+      "name": "VirusTotal HTTP Request1",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "vt9NFRAxRPOiUhnC",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0f48ef60-f156-42e6-8adf-734ab245c50f",
+              "name": "data.attributes.stats.malicious",
+              "value": "={{ $json.data.attributes.stats.malicious }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        416
+      ],
+      "id": "7b6ade6f-3c1c-46df-9084-3105b947629b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "valo2gabo@gmail.com",
+        "subject": "Reporte de analisis de virus ultimo correo",
+        "message": "=Numero de reportes del archivo/url: {{ $json.data.attributes.stats.malicious }}\n\n{{ $json.mensaje }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        416
+      ],
+      "id": "3e0de03b-dd6f-42fd-b30a-98f03f683461",
+      "name": "Send a message",
+      "webhookId": "3547f0f9-9b42-406b-8a0f-563d4c2ee429",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EnzIdp9CWVPr4w8W",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const httpsRegex = /https:\\/\\/[^\\s\"'<)]+/g;\nconst allLinks = new Set();\n\n// Función recursiva para buscar enlaces en todos los campos del objeto\nfunction extractLinksRecursively(value) {\n  if (typeof value === 'string') {\n    const matches = value.match(httpsRegex);\n    if (matches) {\n      matches.forEach(link => allLinks.add(link));\n    }\n  } else if (typeof value === 'object' && value !== null) {\n    for (const key in value) {\n      extractLinksRecursively(value[key]);\n    }\n  }\n}\n\n// Procesar todos los items que vienen del nodo anterior (ej. Gmail)\nfor (const item of items) {\n  extractLinksRecursively(item.json);\n}\n\n// Formatear el resultado en la estructura requerida\nreturn Array.from(allLinks).map(url => ({\n  json: { url }\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "96d95d90-9140-47c9-85c9-3e6353522d83",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "GET",
+        "url": "=https://www.virustotal.com/api/v3/analyses/{{ $json.data.id }}",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": false,
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "b4c0b649-cfdc-4c3e-b9b8-5fa19cb5521d",
+      "name": "VirusTotal HTTP Request3",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "vt9NFRAxRPOiUhnC",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Suponemos que el array de entrada es el contenido de `items`\nconst output = [];\n\nfor (const item of items) {\n  const data = item.json; // o item si ya viene plano\n\n  const url = data?.meta?.url_info?.url || '';\n  const maliciousCount = data?.data?.attributes?.stats?.malicious ?? null;\n\n  if (url.startsWith('https://')) {\n    output.push({\n      json: {\n        url,\n        malicious: maliciousCount\n      }\n    });\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        -16
+      ],
+      "id": "13f4af17-0f5b-491d-a4d6-a273842f317f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const resultado = items.map(item => {\n  const url = item.json.url || \"desconocida\";\n  const malicious = item.json.malicious ?? \"no disponible\";\n  return `<li><strong>${url}</strong>: ${malicious} detecciones maliciosas</li>`;\n}).join(\"\\n\");\n\nreturn [{\n  json: {\n    mensaje: `\n      <p>A continuación se proporciona el análisis de URLs en los correos que te han llegado:</p>\n      <ul>\n        ${resultado}\n      </ul>\n    `\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -16
+      ],
+      "id": "3ac6530a-609d-4983-b438-4baee290bbae",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        240
+      ],
+      "id": "ae1f75c8-de94-41a4-ae12-fe90e4b59aa9",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "POST",
+        "url": "https://www.virustotal.com/api/v3/files",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "attachment_0"
+            }
+          ]
+        },
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        416
+      ],
+      "id": "e86f0374-f016-41e6-9a12-3dd6693f01e3",
+      "name": "VirusTotal File",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "vt9NFRAxRPOiUhnC",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "curlImport": "",
+        "httpVariantWarning": "",
+        "method": "POST",
+        "url": "https://www.virustotal.com/api/v3/urls",
+        "": "",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "virusTotalApi",
+        "provideSslCertificates": false,
+        "sendQuery": false,
+        "sendHeaders": false,
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "specifyBody": "keypair",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "options": {},
+        "infoMessage": ""
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -176,
+        -16
+      ],
+      "id": "729d1108-f136-4901-82cc-b069c5841714",
+      "name": "VirusTotal URL",
+      "extendsCredential": "virusTotalApi",
+      "credentials": {
+        "virusTotalApi": {
+          "id": "vt9NFRAxRPOiUhnC",
+          "name": "VirusTotal account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        416
+      ],
+      "id": "41578947-0af3-46dd-9a42-d6233043215c",
+      "name": "Espera 5 seg",
+      "webhookId": "57338d4a-7751-4d36-8b54-5c3533808d04"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        -16
+      ],
+      "id": "6e12dfe7-58c3-44e1-ae8c-a9c0eeee783a",
+      "name": "Espera 5 seg1",
+      "webhookId": "14c52533-73d5-4b7b-a834-c0aecbde26f6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal File": {
+      "main": [
+        [
+          {
+            "node": "Espera 5 seg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VirusTotal URL": {
+      "main": [
+        [
+          {
+            "node": "Espera 5 seg1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Espera 5 seg": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Espera 5 seg1": {
+      "main": [
+        [
+          {
+            "node": "VirusTotal HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8159af0b-bfef-432b-91f2-c84797743328",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cce2df277b473415e840b59613de85982fc2db4f7a8391d4e3a407ba2410f376"
+  },
+  "id": "HOF4VTBCGS8BElye",
+  "tags": []
+}
